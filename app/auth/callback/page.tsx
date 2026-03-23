@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { exchangeCodeForTokens } from '@/lib/john-deere-client';
 import { useAuth } from '@/contexts/auth-context';
@@ -11,9 +11,16 @@ export default function CallbackPage() {
   const searchParams = useSearchParams();
   const { user, refreshJohnDeereConnection } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Prevent duplicate processing
+      if (hasProcessed.current) {
+        return;
+      }
+
       console.log('[callback] Starting callback handler');
       const code = searchParams.get('code');
       const errorParam = searchParams.get('error');
@@ -34,9 +41,13 @@ export default function CallbackPage() {
       }
 
       if (!user) {
-        setError('You must be logged in to connect to John Deere');
+        // Don't show error immediately - user might still be loading
         return;
       }
+
+      // Mark as processing to prevent duplicate runs
+      hasProcessed.current = true;
+      setIsProcessing(true);
 
       try {
         const redirectUri = `${window.location.origin}/auth/callback`;
@@ -49,6 +60,8 @@ export default function CallbackPage() {
       } catch (err) {
         console.error('[callback] Error during callback:', err);
         setError(err instanceof Error ? err.message : 'Failed to connect to John Deere');
+        setIsProcessing(false);
+        hasProcessed.current = false; // Allow retry
       }
     };
 

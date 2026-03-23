@@ -70,6 +70,7 @@ JOHN_DEERE_CLIENT_SECRET=<client-secret>
 - **One DB row per user** in `john_deere_connections`. RLS ensures users can only see their own row. Edge Functions use the service role key (bypasses RLS) to read/write tokens on the user's behalf.
 - **Auto token refresh** happens inside `getValidToken()` in the `john-deere-api` edge function — if the token expires within 5 minutes, it refreshes before making the API call. Callers never need to trigger this manually.
 - **Sandbox API**: `JOHN_DEERE_API_BASE = "https://sandboxapi.deere.com/platform"`. Change this constant for production use.
+- **Edge Functions JWT validation**: Both `john-deere-auth` and `john-deere-api` functions are deployed with `verifyJWT: false` because they handle JWT validation internally using `supabase.auth.getUser()`. This prevents "Invalid JWT" errors that occur when Supabase's automatic JWT verification runs before the function code.
 
 ---
 
@@ -129,11 +130,23 @@ The redirect URI must be registered in the John Deere Developer Portal and must 
 4. Create a component in `components/dashboard/` and add it to `app/dashboard/page.tsx`.
 
 ### Deploy Edge Functions
+
+**IMPORTANT:** Both functions MUST be deployed with `verifyJWT: false` because they handle JWT validation internally.
+
 ```bash
-supabase functions deploy john-deere-auth
-supabase functions deploy john-deere-api
+# When using Supabase CLI:
+supabase functions deploy john-deere-auth --no-verify-jwt
+supabase functions deploy john-deere-api --no-verify-jwt
 supabase secrets set JOHN_DEERE_CLIENT_ID=<value>
 supabase secrets set JOHN_DEERE_CLIENT_SECRET=<value>
+```
+
+If deploying via the MCP tool in this codebase, use:
+```typescript
+mcp__supabase__deploy_edge_function({
+  slug: "john-deere-auth",
+  verify_jwt: false
+})
 ```
 
 ### Deploy to Netlify
