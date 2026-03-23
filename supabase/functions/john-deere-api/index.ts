@@ -101,7 +101,23 @@ interface JdMeasurement { valueAsDouble: number; unit: string; }
 interface JdBoundary { multipolygons: JdPolygon[]; area?: JdMeasurement; active: boolean; }
 interface JdClient { id: string; name: string; links?: JdLink[]; }
 interface JdFarm { id: string; name: string; links?: JdLink[]; }
-interface JdField { id: string; name: string; activeBoundary?: JdBoundary; boundaries?: JdBoundary[]; clients?: JdClient[]; farms?: JdFarm[]; links: JdLink[]; }
+interface JdClientsEmbed { clients?: JdClient[]; }
+interface JdFarmsEmbed { farms?: JdFarm[]; }
+interface JdField { id: string; name: string; activeBoundary?: JdBoundary; boundaries?: JdBoundary[]; clients?: JdClient[] | JdClientsEmbed; farms?: JdFarm[] | JdFarmsEmbed; links: JdLink[]; }
+
+function extractClients(field: JdField): JdClient[] {
+  if (!field.clients) return [];
+  if (Array.isArray(field.clients)) return field.clients;
+  if ((field.clients as JdClientsEmbed).clients) return (field.clients as JdClientsEmbed).clients!;
+  return [];
+}
+
+function extractFarms(field: JdField): JdFarm[] {
+  if (!field.farms) return [];
+  if (Array.isArray(field.farms)) return field.farms;
+  if ((field.farms as JdFarmsEmbed).farms) return (field.farms as JdFarmsEmbed).farms!;
+  return [];
+}
 
 async function fetchAllFieldsPaginated(accessToken: string, orgId: string): Promise<JdField[]> {
   const allFields: JdField[] = [];
@@ -361,9 +377,10 @@ Deno.serve(async (req: Request) => {
         let farmName: string | null = null;
         let farmId: string | null = null;
 
-        if (field.clients && field.clients.length > 0) {
-          clientName = field.clients[0].name || null;
-          clientId = field.clients[0].id || null;
+        const embeddedClients = extractClients(field);
+        if (embeddedClients.length > 0) {
+          clientName = embeddedClients[0].name || null;
+          clientId = embeddedClients[0].id || null;
         } else {
           const clientsLink = field.links?.find((l: JdLink) => l.rel === "clients");
           if (clientsLink) {
@@ -381,9 +398,10 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        if (field.farms && field.farms.length > 0) {
-          farmName = field.farms[0].name || null;
-          farmId = field.farms[0].id || null;
+        const embeddedFarms = extractFarms(field);
+        if (embeddedFarms.length > 0) {
+          farmName = embeddedFarms[0].name || null;
+          farmId = embeddedFarms[0].id || null;
         } else {
           const farmsLink = field.links?.find((l: JdLink) => l.rel === "farms");
           if (farmsLink) {
