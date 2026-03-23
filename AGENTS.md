@@ -102,6 +102,7 @@ supabase/
 | `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase public anon key |
 | `NEXT_PUBLIC_JOHN_DEERE_CLIENT_ID` | ✅ | John Deere OAuth client ID (used to build auth URL) |
+| `NEXT_PUBLIC_MAPBOX_TOKEN` | ✅ | Mapbox GL JS public access token (for the field boundary map) |
 
 ### Supabase Edge Functions
 
@@ -210,7 +211,7 @@ Open the project in [bolt.new](https://bolt.new) — it reads `package.json` and
 - Build command: `npx next build`
 - Plugin: `@netlify/plugin-nextjs`
 
-Set the three frontend environment variables in Netlify site settings.
+Set the four frontend environment variables in Netlify site settings.
 
 ### Supabase Edge Functions
 Deploy with the Supabase CLI:

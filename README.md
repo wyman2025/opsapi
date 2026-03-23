@@ -64,6 +64,7 @@ types/
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous (public) API key |
 | `NEXT_PUBLIC_JOHN_DEERE_CLIENT_ID` | John Deere OAuth application client ID |
+| `NEXT_PUBLIC_MAPBOX_TOKEN` | Mapbox GL JS public access token (used for the field map) |
 
 ### Supabase Edge Functions
 

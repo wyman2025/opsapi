@@ -174,4 +174,4 @@ mcp__supabase__deploy_edge_function({
 ```
 
 ### Deploy to Netlify
-Connect the repo on Netlify. The `netlify.toml` already sets the build command and plugin. Add the three `NEXT_PUBLIC_*` environment variables in Netlify site settings.
+Connect the repo on Netlify. The `netlify.toml` already sets the build command and plugin. Add the four `NEXT_PUBLIC_*` environment variables in Netlify site settings.
