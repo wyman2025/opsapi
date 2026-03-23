@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { useAuth } from '@/contexts/auth-context';
 import { fetchStoredFields, importFieldsWithBoundaries } from '@/lib/john-deere-client';
 import { Button } from '@/components/ui/button';
@@ -69,6 +68,7 @@ export function FieldMap() {
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
     map.on('load', () => {
+      map.resize();
       setMapReady(true);
     });
 
@@ -78,9 +78,9 @@ export function FieldMap() {
       if (popupRef.current) {
         popupRef.current.remove();
       }
+      setMapReady(false);
       map.remove();
       mapRef.current = null;
-      setMapReady(false);
     };
   }, []);
 
@@ -233,7 +233,7 @@ export function FieldMap() {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="relative" style={{ height: '600px' }}>
-        <div ref={mapContainerRef} className="absolute inset-0" />
+        <div ref={mapContainerRef} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }} />
 
         <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
           <div className="bg-white/95 backdrop-blur-sm rounded-lg border border-slate-200 shadow-lg p-3">

@@ -109,7 +109,7 @@ export default function DashboardPage() {
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="map" className="mt-4">
+                  <TabsContent value="map" className="mt-4 data-[state=inactive]:hidden" forceMount>
                     <FieldMap key={`map-${refreshKey}`} />
                   </TabsContent>
 
