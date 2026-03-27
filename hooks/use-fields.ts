@@ -1,0 +1,61 @@
+'use client';
+
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useAuth } from '@/contexts/auth-context';
+import { fetchStoredFields, importFieldsWithBoundaries } from '@/lib/john-deere-client';
+import type { StoredField } from '@/types/john-deere';
+
+export function useFields() {
+  const { johnDeereConnection } = useAuth();
+  const orgId = johnDeereConnection?.selected_org_id;
+
+  const [fields, setFields] = useState<StoredField[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!orgId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchStoredFields();
+      setFields(data.fields || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load fields');
+    } finally {
+      setLoading(false);
+    }
+  }, [orgId]);
+
+  const importFields = useCallback(async () => {
+    setIsImporting(true);
+    setError(null);
+    try {
+      const data = await importFieldsWithBoundaries();
+      setFields(data.fields || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to import fields');
+    } finally {
+      setIsImporting(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const clients = useMemo(() => {
+    const set = new Set<string>();
+    fields.forEach(f => { if (f.client_name) set.add(f.client_name); });
+    return Array.from(set).sort();
+  }, [fields]);
+
+  const farms = useMemo(() => {
+    const set = new Set<string>();
+    fields.forEach(f => { if (f.farm_name) set.add(f.farm_name); });
+    return Array.from(set).sort();
+  }, [fields]);
+
+  return { fields, loading, error, refresh, importFields, isImporting, clients, farms };
+}

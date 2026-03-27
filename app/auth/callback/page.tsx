@@ -56,7 +56,7 @@ export default function CallbackPage() {
         console.log('[callback] Token exchange complete, refreshing connection...');
         await refreshJohnDeereConnection();
         console.log('[callback] Connection refreshed, redirecting to dashboard');
-        router.push('/dashboard');
+        router.push('/map');
       } catch (err) {
         console.error('[callback] Error during callback:', err);
         setError(err instanceof Error ? err.message : 'Failed to connect to John Deere');
@@ -72,21 +72,21 @@ export default function CallbackPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="glass-panel p-8 rounded-2xl max-w-md w-full mx-4">
           <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h1 className="text-xl font-semibold text-slate-900 mb-2">Connection Failed</h1>
-            <p className="text-slate-600 mb-6">{error}</p>
+            <h1 className="text-xl font-semibold text-white mb-2">Connection Failed</h1>
+            <p className="text-slate-400 mb-6 text-sm">{error}</p>
             <button
-              onClick={() => router.push('/dashboard')}
-              className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+              onClick={() => router.push('/map')}
+              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-medium transition-colors shadow-lg shadow-emerald-500/25"
             >
-              Back to Dashboard
+              Back to Map
             </button>
           </div>
         </div>
@@ -95,12 +95,12 @@ export default function CallbackPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="glass-panel p-8 rounded-2xl max-w-md w-full mx-4">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-slate-900 mb-2">Connecting to John Deere</h1>
-          <p className="text-slate-600">Please wait while we complete the connection...</p>
+          <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto mb-4" />
+          <h1 className="text-lg font-semibold text-white mb-2">Connecting to John Deere</h1>
+          <p className="text-slate-400 text-sm">Please wait while we complete the connection...</p>
         </div>
       </div>
     </div>
