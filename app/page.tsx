@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.push('/dashboard');
+        router.push('/map');
       } else {
         router.push('/login');
       }
@@ -20,12 +20,12 @@ export default function Home() {
   }, [user, loading, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <Tractor className="w-8 h-8 text-white" />
+        <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/20">
+          <Tractor className="w-6 h-6 text-white" />
         </div>
-        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
+        <Loader2 className="w-6 h-6 text-emerald-400 animate-spin mx-auto" />
       </div>
     </div>
   );

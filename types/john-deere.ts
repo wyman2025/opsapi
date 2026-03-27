@@ -33,8 +33,10 @@ export interface JohnDeereBoundary {
   id: string;
   name?: string;
   area?: JohnDeereMeasurement;
+  workableArea?: JohnDeereMeasurement;
   multipolygons: JohnDeerePolygon[];
   active: boolean;
+  irrigated?: boolean;
   links: JohnDeereLink[];
 }
 
@@ -107,10 +109,64 @@ export interface ImportFieldsResponse {
   withoutBoundaries: number;
 }
 
+export interface StoredFieldOperation {
+  id: string;
+  user_id: string;
+  org_id: string;
+  jd_field_id: string;
+  jd_operation_id: string;
+  operation_type: string;
+  crop_season: string | null;
+  crop_name: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  variety_name: string | null;
+  machine_name: string | null;
+  machine_vin: string | null;
+  area_value: number | null;
+  area_unit: string | null;
+  avg_yield_value: number | null;
+  avg_yield_unit: string | null;
+  avg_moisture: number | null;
+  total_wet_mass_value: number | null;
+  total_wet_mass_unit: string | null;
+  map_image_path: string | null;
+  map_image_extent: { minimumLatitude: number; maximumLatitude: number; minimumLongitude: number; maximumLongitude: number } | null;
+  map_image_legends: Array<{ label?: string; hexColor?: string; minimum?: number; maximum?: number; percent?: number }> | null;
+  measurement_type: string | null;
+  imported_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface JohnDeereTokenResponse {
   access_token: string;
   refresh_token: string;
   expires_in: number;
   token_type: string;
   scope: string;
+}
+
+export interface IrrigationAnalysis {
+  fieldId: string;
+  fieldName: string;
+  boundaryId: string;
+  irrigated: boolean;
+  totalArea: { value: number; unit: string };
+  workableArea: { value: number; unit: string };
+  irrigatedAcres: number;
+  drylandAcres: number;
+  exteriorGeoJSON: GeoJSON.MultiPolygon | null;
+  interiorRingsGeoJSON: Array<GeoJSON.Polygon> | null;
+}
+
+export interface HarvestIrrigationAnalysis extends IrrigationAnalysis {
+  operationId: string;
+  harvestPolygons: GeoJSON.FeatureCollection | null;
+  irrigatedHarvestedAcres: number;
+  drylandHarvestedAcres: number;
+  irrigatedAvgYield: number | null;
+  drylandAvgYield: number | null;
+  irrigatedAvgMoisture: number | null;
+  drylandAvgMoisture: number | null;
 }
