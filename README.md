@@ -1,6 +1,6 @@
 # Farm Data Hub
 
-A demo web app that connects to the **John Deere Operations Center API** to display farm data — fields, organizations, and harvest operations — all behind a Supabase-powered auth layer.
+A demo web app that connects to the **John Deere Operations Center API** to display farm data — fields, boundaries, irrigation analysis, and harvest/seeding operations — all behind a Supabase-powered auth layer.
 
 ![Dashboard screenshot](./map.png)
 
@@ -14,13 +14,15 @@ A demo web app that connects to the **John Deere Operations Center API** to disp
 
 1. Users sign in or create an account (Supabase Auth).
 2. They connect their John Deere Operations Center account via OAuth 2.0.
-3. They pick an organization and browse **fields** and **harvest operations** pulled live from the John Deere API.
+3. They pick an organization and browse **fields**, **boundaries**, and **operations** (harvest, seeding) pulled from the John Deere API.
+4. Fields are displayed on a Mapbox GL satellite map with active and irrigated boundary overlays.
+5. Irrigation analysis classifies harvest/seeding data into irrigated vs. dryland zones using shapefile-based polygon classification.
 
 ## Tech stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 13 (App Router), React, Tailwind CSS, shadcn/ui |
+| Frontend | Next.js 13 (App Router), React, Tailwind CSS, shadcn/ui, Mapbox GL |
 | Backend | Supabase Edge Functions (Deno) |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth (email/password) + John Deere OAuth 2.0 |
@@ -29,34 +31,65 @@ A demo web app that connects to the **John Deere Operations Center API** to disp
 ## Project structure
 
 ```
-app/                    # Next.js pages
-  page.tsx              # Root redirect (→ /login or /dashboard)
-  login/page.tsx        # Sign-in / sign-up form
-  dashboard/page.tsx    # Main dashboard
-  auth/callback/page.tsx# John Deere OAuth callback handler
+app/
+  page.tsx                        # Root redirect (→ /login or /map)
+  login/page.tsx                  # Sign-in / sign-up form
+  dashboard/page.tsx              # Legacy dashboard (auth-gated)
+  auth/callback/page.tsx          # John Deere OAuth callback handler
+  (app)/
+    map/page.tsx                  # Map-first main view
+    map/field/[fieldId]/page.tsx  # Field detail view on map
+    fields/page.tsx               # Fields grid list with filters
+    operations/page.tsx           # Operations list with irrigation analysis
+    settings/page.tsx             # User settings (area unit preference)
 
-components/dashboard/   # Dashboard UI components
-  john-deere-connect.tsx
-  organization-selector.tsx
-  fields-list.tsx
-  harvest-operations.tsx
+components/
+  dashboard/                      # Dashboard feature components
+    harvest-operations.tsx        # Harvest operations display
+    planting-operations.tsx       # Planting operations display
+    irrigation-analysis.tsx       # Irrigation analysis with shapefile processing
+    area-unit-toggle.tsx          # Toggle between acres and hectares
+    field-filters.tsx             # Client/farm filter controls
+  map/                            # Map components
+    full-map.tsx                  # Mapbox GL map with field + irrigated boundaries
+    field-side-panel.tsx          # Field detail slide-in panel
+    map-controls.tsx              # Map toolbar controls
+  overlays/                       # Full-screen overlay components
+    connect-overlay.tsx           # John Deere connect overlay
+    org-selector-overlay.tsx      # Organization selector overlay
+  layout/                         # App layout components
+    nav-links.tsx                 # Navigation sidebar links
+    top-bar.tsx                   # Top navigation bar
+    user-menu.tsx                 # User dropdown menu
+  ui/                             # shadcn/ui primitives (do not edit manually)
 
 contexts/
-  auth-context.tsx      # Auth state + John Deere connection state
+  auth-context.tsx                # Auth state + John Deere connection state
+  map-context.tsx                 # Map state: fields, selection, operations
 
 lib/
-  supabase.ts           # Supabase client
-  john-deere-client.ts  # API helper functions
+  supabase.ts                     # Supabase browser client
+  john-deere-client.ts            # API helper functions (fetch wrappers)
+  area-utils.ts                   # Area unit conversion utilities
+  shapefile-analysis.ts           # Shapefile parsing + irrigated/dryland classification
+  utils.ts                        # shadcn cn() utility
 
 supabase/
   functions/
-    john-deere-auth/    # Edge Function: OAuth token exchange / refresh / disconnect
-    john-deere-api/     # Edge Function: Organizations, fields, harvest operations
-  migrations/           # Database schema (john_deere_connections table)
+    _shared/                      # Shared utilities for edge functions
+      auth.ts                     # JWT validation helpers
+      boundaries.ts               # Boundary conversion (JD → GeoJSON)
+      cors.ts                     # CORS response helpers
+      john-deere.ts               # JD API call helpers, token refresh
+    john-deere-auth/              # Edge Function: OAuth token exchange / refresh / disconnect
+    john-deere-api/               # Edge Function: Organizations, stored fields/operations
+    john-deere-import/            # Edge Function: Import fields + operations from JD API
+    john-deere-irrigation/        # Edge Function: Irrigation analysis + shapefile proxying
+  migrations/                     # Database schema migrations
 
 types/
-  database.ts           # Supabase table types
-  john-deere.ts         # John Deere API response types
+  database.ts                     # Supabase table types
+  john-deere.ts                   # John Deere API response types + stored data types
 ```
 
 ## Environment variables
@@ -117,15 +150,27 @@ A `netlify.toml` is already configured. Connect your GitHub repo to Netlify and 
 3. Request the scopes: `ag1 ag2 ag3 org1 org2 work1 work2 offline_access`.
 4. Copy the client ID and secret into your environment variables.
 
-> **Note:** The app currently targets the John Deere **sandbox** API (`sandboxapi.deere.com`). Switch the base URL in `supabase/functions/john-deere-api/index.ts` for production.
+> **Note:** The app currently targets the John Deere **sandbox** API (`sandboxapi.deere.com`). Switch the base URL in `supabase/functions/_shared/john-deere.ts` for production.
+
+## John Deere Field Boundary Setup
+
+When setting up boundaries in John Deere to enable irrigation analysis, this application is expecting two boundaries:
+
+![John Deere Boundaries for a Field](./field-boundaries.png)
+
+The "irrigated" attribute should be set on the inactive boundary that represents the irrigated area of the field:
+![Irrigated Boundary settings](./field-boundary-irrigated.png)
 
 ## Database
 
-Run the migration to create the `john_deere_connections` table:
+Run migrations to set up the database schema:
 
 ```bash
-supabase db push
+npx supabase migration up
 # or apply supabase/migrations/ manually in the Supabase SQL editor
 ```
 
-The table stores one OAuth token record per user (RLS enforced — users can only access their own row).
+Key tables:
+- **`john_deere_connections`** — One OAuth token record per user (RLS enforced)
+- **`fields`** — Imported field data with active + irrigated boundary GeoJSON
+- **`field_operations`** — Imported harvest/seeding operations with map images
