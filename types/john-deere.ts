@@ -164,6 +164,19 @@ export interface Owner {
   updated_at: string;
 }
 
+export interface IrrigationAnalysis {
+  fieldId: string;
+  fieldName: string;
+  totalArea: number;
+  totalAreaUnit: string;
+  irrigatedArea: number | null;
+  irrigatedAreaUnit: string | null;
+  drylandArea: number | null;
+  irrigatedPercent: number | null;
+  drylandPercent: number | null;
+  hasIrrigatedBoundary: boolean;
+}
+
 export interface FieldOwnerBoundary {
   id: string;
   user_id: string;
