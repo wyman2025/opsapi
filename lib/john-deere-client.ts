@@ -234,6 +234,30 @@ export async function deleteOwner(ownerId: string) {
   return response.json();
 }
 
+export async function fetchIrrigationAnalysis(fieldId: string, orgId: string) {
+  const headers = await getAuthHeaders();
+  const response = await fetch(
+    `${SUPABASE_URL}/functions/v1/john-deere-irrigation?action=analyze&fieldId=${encodeURIComponent(fieldId)}&orgId=${encodeURIComponent(orgId)}`,
+    { headers },
+  );
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch irrigation analysis');
+  }
+  return response.json();
+}
+
+export async function pollForShapefileUrl(fieldId: string, orgId: string): Promise<string | null> {
+  const headers = await getAuthHeaders();
+  const response = await fetch(
+    `${SUPABASE_URL}/functions/v1/john-deere-irrigation?action=shapefile-url&fieldId=${encodeURIComponent(fieldId)}&orgId=${encodeURIComponent(orgId)}`,
+    { headers },
+  );
+  if (!response.ok) return null;
+  const data = await response.json();
+  return data.url || null;
+}
+
 export async function fetchFieldBoundaries(fieldId: string) {
   const headers = await getAuthHeaders();
   const response = await fetch(
